@@ -1,0 +1,10 @@
+[Unit]
+Description=Nitter notification daemon
+
+[Service]
+Environment=PYTHONUNBUFFERED=true
+ExecStart=/usr/bin/python -m nitter
+Type=notify
+WatchdogSec=30
+Restart=on-failure
+RestartSec=10
