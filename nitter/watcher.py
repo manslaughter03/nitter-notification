@@ -2,6 +2,8 @@
 
 watcher module
 """
+__strict__ = True
+
 import os
 from typing import Dict
 from datetime import datetime
@@ -11,7 +13,7 @@ import logging
 import yaml
 import sdnotify
 
-from nitter.nitter import fetch_feed
+from nitter.nitter import fetch_feed, FetchException
 from nitter.notify import send_notify
 from nitter.logger import configure_logger
 
@@ -30,6 +32,7 @@ class Watcher:
         self.db_path = db_path
         self._config_data = {}
         self._cached_stamp = 0
+        self._cached_time = None
         self._load_db()
         self.logger = configure_logger(logging.DEBUG if debug_mode else logging.INFO)
         self.notifier = sdnotify.SystemdNotifier()
@@ -71,13 +74,20 @@ class Watcher:
     def fetch(self):
         """
 
-        execute watcher
+        fetch feed
         :return:
         """
         new_twitt = False
         followings = self.config_data.get("followings", [])
         self.logger.info("Fetch %s", followings)
-        twitts = fetch_feed(followings, self.logger)
+        twitts = []
+        instance_urls = self.config_data.get("instance_urls", [])
+        for instance_url in instance_urls:
+            try:
+                twitts = fetch_feed(instance_url, followings, self.logger)
+                break
+            except FetchException as exception:
+                self.logger.warning("Failed to fetch followings, %s", exception)
         for item in twitts:
             self.logger.debug("pub_date: %s _cached_time: %s", item.pub_date, self._cached_time)
             if item.pub_date > self._cached_time:

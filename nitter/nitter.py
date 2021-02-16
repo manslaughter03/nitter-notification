@@ -12,16 +12,25 @@ from lxml import etree
 from nitter.types import Twitt
 
 
-def fetch_feed(followings: List[str], logger: logging.Logger) -> List[Twitt]:
+class FetchException(Exception):
+    """
+
+    FetchException
+    """
+
+
+def fetch_feed(instance_urls: str, followings: List[str], logger: logging.Logger) -> List[Twitt]:
     """
 
     fetch nitter rss
     :param username:
     :return:
     """
-    url = f"https://nitter.net/{','.join(followings)}/rss"
+    url = f"{instance_urls}/{','.join(followings)}/rss"
     logger.info("Request on %s", url)
     resp = requests.get(url)
+    if resp.status_code != 200:
+        raise FetchException(f"Fail to fetch status: {resp.status_code} {followings}")
     root = etree.fromstring(resp.text.encode()) # pylint: disable=c-extension-no-member
     return [Twitt(**{"title": item.find("title").text,
                      "description": item.find("description").text,

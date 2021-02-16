@@ -3,3 +3,6 @@ followings:
   - "washingtonpost"
 
 sleep_interval: 5
+instance_urls:
+  - "https://nitter.42l.fr/"
+  - "https://nitter.nixnet.services"
